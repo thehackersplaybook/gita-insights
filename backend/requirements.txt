@@ -1,0 +1,5 @@
+chromadb==0.5.23
+fastapi==0.115.8
+numpy==2.2.3
+openai==1.63.2
+pandas==1.5.3
