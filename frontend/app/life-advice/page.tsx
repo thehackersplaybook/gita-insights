@@ -1,10 +1,17 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Send } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import { useState } from "react";
+import { Send } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
+import { Input } from "@/components/ui/input";
 
 // Mock data for demonstration
 const adviceDatabase = [
@@ -23,24 +30,37 @@ const adviceDatabase = [
     advice:
       "The Gita reminds us that we have control over our actions, not the results. Learn from your failures, but don't be attached to them. Keep performing your duties with dedication and without expectation.",
   },
-]
+];
 
 export default function LifeAdvice() {
-  const [situation, setSituation] = useState("")
-  const [advice, setAdvice] = useState("")
+  const [situation, setSituation] = useState("");
+  const [advice, setAdvice] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const getAdvice = () => {
-    const lowercaseSituation = situation.toLowerCase()
-    const matchingAdvice = adviceDatabase.find((item) => lowercaseSituation.includes(item.situation))
+  const getAdvice = async () => {
+    try {
+      setLoading(true);
+      const lowercaseSituation = situation.toLowerCase();
 
-    if (matchingAdvice) {
-      setAdvice(matchingAdvice.advice)
-    } else {
-      setAdvice(
-        "I'm sorry, I couldn't find specific advice for your situation. Remember that the Gita teaches us to act with detachment, focus on our duties, and maintain equanimity in all situations.",
-      )
+      const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/get_advice`;
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ life_situation: lowercaseSituation }),
+      }).then((res) => res.json());
+
+      const advice = response.advice;
+      setAdvice(advice);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching advice:", error);
+      setAdvice("Sorry, an error occurred. Please try again later.");
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-5rem)]">
@@ -48,7 +68,9 @@ export default function LifeAdvice() {
       <Card className="w-full max-w-2xl">
         <CardHeader>
           <CardTitle>Seek Guidance</CardTitle>
-          <CardDescription>Describe your situation to receive advice from the Bhagavad Gita</CardDescription>
+          <CardDescription>
+            Describe your situation to receive advice from the Bhagavad Gita
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex space-x-2">
@@ -57,19 +79,24 @@ export default function LifeAdvice() {
               value={situation}
               onChange={(e) => setSituation(e.target.value)}
             />
-            <Button onClick={getAdvice} className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button
+              onClick={getAdvice}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
               <Send className="mr-2 h-4 w-4" /> Get Advice
             </Button>
           </div>
-          {advice && (
+          <Spinner show={loading} className="mt-4" size="large">
+            Fetching advice...
+          </Spinner>
+          {!loading && advice && (
             <div className="mt-6">
               <h3 className="text-xl font-semibold mb-2">Gita's Wisdom:</h3>
-              <p>{advice}</p>
+              <p className="text-sm">{advice}</p>
             </div>
           )}
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
-

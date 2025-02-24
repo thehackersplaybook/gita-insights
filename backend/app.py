@@ -8,6 +8,7 @@ import numpy as np
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv(dotenv_path=".env", override=True)
 
@@ -242,6 +243,19 @@ app = FastAPI(lifespan=lifespan)
 
 class AdviceRequest(BaseModel):
     life_situation: str
+
+
+origins = [
+    "http://localhost:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/get_random_shloka")
